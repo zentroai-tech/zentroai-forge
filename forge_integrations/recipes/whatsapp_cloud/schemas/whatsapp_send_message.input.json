@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": ["to", "text"],
+  "properties": {
+    "to": {
+      "type": "string",
+      "minLength": 6
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "preview_url": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

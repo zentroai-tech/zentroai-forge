@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": ["query"],
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 8
+    },
+    "filters": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+}

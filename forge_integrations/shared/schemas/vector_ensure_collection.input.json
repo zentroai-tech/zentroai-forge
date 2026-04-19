@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "required": ["collection", "size"],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Collection/index name"
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536,
+      "description": "Vector dimension"
+    },
+    "distance": {
+      "type": "string",
+      "enum": ["cosine", "euclidean", "dot"],
+      "default": "cosine",
+      "description": "Distance metric"
+    },
+    "on_disk": {
+      "type": "boolean",
+      "default": false,
+      "description": "Store payload on disk (Qdrant only)"
+    }
+  },
+  "additionalProperties": false
+}

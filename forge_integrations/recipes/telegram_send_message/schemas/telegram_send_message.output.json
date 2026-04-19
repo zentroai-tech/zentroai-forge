@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["ok", "message_id", "provider"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "message_id": { "type": ["string", "integer"] },
+    "provider": { "type": "string" },
+    "raw": { "type": "object" }
+  },
+  "additionalProperties": true
+}

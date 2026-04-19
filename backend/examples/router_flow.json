@@ -1,0 +1,137 @@
+{
+  "ir_version": "2",
+  "flow": {
+    "id": "intent-router",
+    "name": "Intent Router Flow",
+    "version": "1.0.0",
+    "engine_preference": "langchain",
+    "description": "A flow that routes queries to different handlers based on intent classification."
+  },
+  "agents": [
+    {
+      "id": "main",
+      "name": "Intent Router",
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.0,
+        "system_prompt": "Classify the user's intent and route to the appropriate handler."
+      },
+      "graph": {
+        "root": "classifier",
+        "nodes": [
+          {
+            "id": "classifier",
+            "type": "LLM",
+            "name": "Intent Classifier",
+            "params": {
+              "model": "gpt-3.5-turbo",
+              "temperature": 0.0,
+              "system_prompt": "Classify the user's intent. Respond with exactly one word: 'question', 'complaint', or 'feedback'.",
+              "prompt_template": "Classify this message: {input}"
+            }
+          },
+          {
+            "id": "router",
+            "type": "Router",
+            "name": "Intent Router",
+            "params": {
+              "routes": {
+                "question": "question_handler",
+                "complaint": "complaint_handler",
+                "feedback": "feedback_handler"
+              },
+              "default_route": "question_handler"
+            }
+          },
+          {
+            "id": "question_handler",
+            "type": "LLM",
+            "name": "Question Handler",
+            "params": {
+              "model": "gpt-3.5-turbo",
+              "temperature": 0.7,
+              "system_prompt": "You are a helpful assistant answering questions.",
+              "prompt_template": "{input}"
+            }
+          },
+          {
+            "id": "complaint_handler",
+            "type": "LLM",
+            "name": "Complaint Handler",
+            "params": {
+              "model": "gpt-3.5-turbo",
+              "temperature": 0.5,
+              "system_prompt": "You are a customer service representative handling complaints. Be empathetic and solution-oriented.",
+              "prompt_template": "Customer complaint: {input}\n\nProvide a helpful and empathetic response:"
+            }
+          },
+          {
+            "id": "feedback_handler",
+            "type": "LLM",
+            "name": "Feedback Handler",
+            "params": {
+              "model": "gpt-3.5-turbo",
+              "temperature": 0.7,
+              "system_prompt": "You are collecting and acknowledging user feedback. Thank them for their input.",
+              "prompt_template": "User feedback: {input}\n\nAcknowledge their feedback:"
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Final Response",
+            "params": {
+              "output_template": "{current}",
+              "format": "text"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "source": "classifier",
+            "target": "router"
+          },
+          {
+            "source": "router",
+            "target": "question_handler"
+          },
+          {
+            "source": "router",
+            "target": "complaint_handler"
+          },
+          {
+            "source": "router",
+            "target": "feedback_handler"
+          },
+          {
+            "source": "question_handler",
+            "target": "output"
+          },
+          {
+            "source": "complaint_handler",
+            "target": "output"
+          },
+          {
+            "source": "feedback_handler",
+            "target": "output"
+          }
+        ]
+      }
+    }
+  ],
+  "entrypoints": [
+    {
+      "name": "main",
+      "agent_id": "main",
+      "description": "Default entrypoint"
+    }
+  ],
+  "handoffs": [],
+  "resources": {
+    "shared_memory_namespaces": [],
+    "global_tools": [],
+    "schema_contracts": {}
+  },
+  "policies": {}
+}

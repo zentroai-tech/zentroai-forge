@@ -1,0 +1,84 @@
+{
+  "ir_version": "2",
+  "flow": {
+    "id": "customer-support-rag",
+    "name": "Customer Support RAG Agent",
+    "version": "1.0.0",
+    "engine_preference": "auto",
+    "description": "A RAG-based customer support agent that retrieves relevant documentation and generates helpful responses."
+  },
+  "agents": [
+    {
+      "id": "main",
+      "name": "Customer Support RAG Agent",
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4",
+        "temperature": 0.3,
+        "system_prompt": "You are a helpful customer support agent. Answer questions based on the provided documentation. If you cannot find a relevant answer, politely ask for clarification."
+      },
+      "graph": {
+        "root": "retriever",
+        "nodes": [
+          {
+            "id": "retriever",
+            "type": "Retriever",
+            "name": "Documentation Retriever",
+            "params": {
+              "query_template": "{input}",
+              "top_k": 5,
+              "index_name": "support_docs",
+              "index_config": {
+                "type": "vector"
+              }
+            }
+          },
+          {
+            "id": "llm",
+            "type": "LLM",
+            "name": "Response Generator",
+            "params": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "system_prompt": "You are a helpful customer support agent. Answer questions based on the provided documentation. If you cannot find a relevant answer, politely ask for clarification.",
+              "prompt_template": "Based on the following documentation:\n\n{citations}\n\nCustomer Question: {input}\n\nProvide a helpful response:"
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Final Response",
+            "params": {
+              "output_template": "{current}",
+              "format": "markdown"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "source": "retriever",
+            "target": "llm"
+          },
+          {
+            "source": "llm",
+            "target": "output"
+          }
+        ]
+      }
+    }
+  ],
+  "entrypoints": [
+    {
+      "name": "main",
+      "agent_id": "main",
+      "description": "Default entrypoint"
+    }
+  ],
+  "handoffs": [],
+  "resources": {
+    "shared_memory_namespaces": [],
+    "global_tools": [],
+    "schema_contracts": {}
+  },
+  "policies": {}
+}

@@ -1,0 +1,723 @@
+{
+  "ir_version": "2",
+  "flow": {
+    "id": "ma-pharma-research-copilot",
+    "name": "Pharma Research Copilot (RAG + Tools + QA)",
+    "version": "1.0.0",
+    "engine_preference": "langchain",
+    "description": "Pharma-grade research copilot: RAG with citations + tool execution (PubMed/SQL/API/Python/S3) + strict validation + synthesis + recovery."
+  },
+  "agents": [
+    {
+      "id": "supervisor",
+      "name": "Supervisor",
+      "graph": {
+        "nodes": [
+          {
+            "id": "triage",
+            "type": "LLM",
+            "name": "Triage Request",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "system_prompt": "You are a supervisor for scientific agentic workflows. Classify the request into: research (needs evidence/RAG), tool (needs external tools/SQL/API), validate (needs QA checks), synth (needs final narrative), or error (runtime issues). Output ONLY one token: research|tool|validate|synth|error.",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": true,
+              "provider": "openai"
+            }
+          },
+          {
+            "id": "dispatch",
+            "type": "Router",
+            "name": "Dispatch Router",
+            "params": {
+              "routes": {
+                "research": "researcher",
+                "tool": "toolsmith",
+                "validate": "validator",
+                "synth": "synthesizer",
+                "error": "reliability"
+              },
+              "default_route": "researcher",
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Supervisor Output",
+            "params": {
+              "output_template": "{current}",
+              "format": "text",
+              "is_start": false
+            }
+          }
+        ],
+        "edges": [
+          { "source": "triage", "target": "dispatch", "condition": null },
+          { "source": "dispatch", "target": "output", "condition": null }
+        ],
+        "root": "triage"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.2,
+        "system_prompt": "You supervise specialists, enforce policies, and prevent unsafe outputs."
+      },
+      "tools_allowlist": [],
+      "memory_namespace": null,
+      "budgets": {
+        "max_tokens": 80000,
+        "max_tool_calls": null,
+        "max_steps": 18,
+        "max_depth": 4
+      },
+      "policies": null,
+      "retries": {
+        "max_attempts": 2,
+        "backoff_ms": 250,
+        "retry_on": ["timeout", "rate_limit", "5xx"],
+        "jitter": true
+      },
+      "fallbacks": {
+        "llm_chain": [
+          { "provider": "openai", "model": "gpt-4o-mini", "temperature": 0.2 },
+          { "provider": "gemini", "model": "gemini-2.5-flash", "temperature": 0.2 }
+        ],
+        "tool_fallbacks": {}
+      }
+    },
+    {
+      "id": "researcher",
+      "name": "Researcher",
+      "graph": {
+        "nodes": [
+          {
+            "id": "intake",
+            "type": "LLM",
+            "name": "Research Intake",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.3,
+              "system_prompt": "Convert the user question into a retrieval query. Prefer precise biomedical terms (genes, biomarkers, drug names, trial phase, endpoints). Output only the query string.",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": true,
+              "provider": "openai"
+            }
+          },
+          {
+            "id": "retrieve",
+            "type": "Retriever",
+            "name": "Retrieve Evidence",
+            "params": {
+              "query_template": "{current}",
+              "top_k": 8,
+              "index_name": "scientific_corpus",
+              "index_config": { "type": "vector" },
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "memory",
+            "type": "Memory",
+            "name": "Research Memory",
+            "params": {
+              "memory_type": "summary",
+              "max_tokens": 3000,
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "join_context",
+            "type": "Join",
+            "name": "Join Context",
+            "params": { "strategy": "dict", "is_start": false }
+          },
+          {
+            "id": "draft",
+            "type": "LLM",
+            "name": "Draft Findings (Cited)",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "system_prompt": "Draft findings strictly grounded in retrieved evidence. Every non-trivial claim must be backed by citations from the retrieved context. If evidence is insufficient, abstain and ask for missing inputs.",
+              "prompt_template": "{current}",
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Research Output",
+            "params": { "output_template": "{current}", "format": "markdown", "is_start": false }
+          }
+        ],
+        "edges": [
+          { "source": "intake", "target": "retrieve", "condition": null },
+          { "source": "retrieve", "target": "join_context", "condition": null },
+          { "source": "memory", "target": "join_context", "condition": null },
+          { "source": "join_context", "target": "draft", "condition": null },
+          { "source": "draft", "target": "output", "condition": null }
+        ],
+        "root": "intake"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.3,
+        "system_prompt": "You are a research specialist for biomedical RAG with citation discipline."
+      },
+      "tools_allowlist": ["web_search", "url_reader", "mcp:*"],
+      "memory_namespace": "research_memory",
+      "budgets": {
+        "max_tokens": 60000,
+        "max_tool_calls": 6,
+        "max_steps": 12,
+        "max_depth": 3
+      },
+      "policies": {
+        "tool_allowlist": ["web_search", "url_reader", "mcp:*"],
+        "tool_denylist": [],
+        "max_tool_calls": 6,
+        "max_steps": 12,
+        "max_depth": 3,
+        "abstain": {
+          "enabled": true,
+          "reason_template": "Insufficient evidence to answer safely with citations.",
+          "confidence_threshold": 0.4,
+          "require_citations_for_rag": true
+        },
+        "redaction": {
+          "enabled": true,
+          "patterns": [],
+          "mask": "***REDACTED***"
+        },
+        "input_sanitization": {
+          "enabled": true,
+          "max_input_chars": 12000,
+          "strip_html": true
+        },
+        "allow_schema_soft_fail": true
+      },
+      "retries": {
+        "max_attempts": 3,
+        "backoff_ms": 350,
+        "retry_on": ["timeout", "rate_limit", "5xx"],
+        "jitter": true
+      },
+      "fallbacks": null
+    },
+    {
+      "id": "toolsmith",
+      "name": "Toolsmith",
+      "graph": {
+        "nodes": [
+          {
+            "id": "plan",
+            "type": "LLM",
+            "name": "Plan Tool Calls",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.1,
+              "system_prompt": "Plan safe tool calls for biomedical workflows. Prefer: (1) PubMed search, (2) SQL read-only queries, (3) internal REST APIs, (4) Python sandbox computations, (5) S3 read. Output a short plan and the first tool call args as JSON.",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": true
+            }
+          },
+          {
+            "id": "pubmed_search",
+            "type": "Tool",
+            "name": "PubMed Search (MCP)",
+            "params": {
+              "tool_name": "mcp:pubmed.search",
+              "tool_config": {
+                "mcp_server": {
+                  "tool_name": "pubmed.search",
+                  "command": "npx",
+                  "args": ["-y", "@modelcontextprotocol/server-pubmed"],
+                  "timeout_seconds": 20
+                }
+              },
+              "engine": "langchain",
+              "retries": {
+                "max_attempts": 3,
+                "backoff_ms": 500,
+                "retry_on": ["timeout", "rate_limit", "5xx", "unknown"],
+                "jitter": true
+              },
+              "fallbacks": {
+                "tool_fallbacks": {
+                  "mcp:pubmed.search": ["web_search", "search"]
+                }
+              },
+              "is_start": false
+            }
+          },
+          {
+            "id": "sql_query",
+            "type": "Tool",
+            "name": "SQL Query (Read Only)",
+            "params": {
+              "tool_name": "sql_query",
+              "tool_config": {
+                "readonly": true,
+                "allowed_schemas": ["clinical", "omics", "pathology"]
+              },
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "http_request",
+            "type": "Tool",
+            "name": "Internal REST API Call",
+            "params": {
+              "tool_name": "http_request",
+              "tool_config": {
+                "allowed_hosts": ["internal.api.company", "clinical.api.company"],
+                "timeout_seconds": 15
+              },
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "python_sandbox",
+            "type": "Tool",
+            "name": "Python Sandbox Analysis",
+            "params": {
+              "tool_name": "python_sandbox",
+              "tool_config": {
+                "sandbox": true,
+                "no_network": true,
+                "max_runtime_seconds": 10
+              },
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "s3_get",
+            "type": "Tool",
+            "name": "S3 Get Object (Read Only)",
+            "params": {
+              "tool_name": "s3_get_object",
+              "tool_config": {
+                "readonly": true
+              },
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "summarize",
+            "type": "LLM",
+            "name": "Summarize Tool Outputs (Structured)",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "system_prompt": "Summarize tool outputs into structured findings. Preserve provenance: for each finding include source tool + identifiers/urls/row counts when available. Do not invent values.",
+              "prompt_template": "{current}",
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Tool Output",
+            "params": { "output_template": "{current}", "format": "json", "is_start": false }
+          }
+        ],
+        "edges": [
+          { "source": "plan", "target": "pubmed_search", "condition": null },
+          { "source": "pubmed_search", "target": "summarize", "condition": null },
+          { "source": "sql_query", "target": "summarize", "condition": null },
+          { "source": "http_request", "target": "summarize", "condition": null },
+          { "source": "python_sandbox", "target": "summarize", "condition": null },
+          { "source": "s3_get", "target": "summarize", "condition": null },
+          { "source": "summarize", "target": "output", "condition": null }
+        ],
+        "root": "plan"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.1,
+        "system_prompt": "You execute tools safely and return structured outputs with provenance."
+      },
+      "tools_allowlist": [
+        "search",
+        "web_search",
+        "url_reader",
+        "calculator",
+        "datetime",
+        "mcp:*",
+        "sql_query",
+        "http_request",
+        "python_sandbox",
+        "s3_get_object"
+      ],
+      "memory_namespace": "tool_memory",
+      "budgets": {
+        "max_tokens": 60000,
+        "max_tool_calls": 8,
+        "max_steps": 10,
+        "max_depth": 3
+      },
+      "policies": {
+        "tool_allowlist": [
+          "search",
+          "web_search",
+          "url_reader",
+          "calculator",
+          "datetime",
+          "mcp:*",
+          "sql_query",
+          "http_request",
+          "python_sandbox",
+          "s3_get_object"
+        ],
+        "tool_denylist": ["python_repl", "shell", "exec"],
+        "max_tool_calls": 8,
+        "max_steps": 10,
+        "max_depth": 3,
+        "abstain": {
+          "enabled": true,
+          "reason_template": "Unable to complete tool execution safely with available permissions or evidence.",
+          "confidence_threshold": 0.35,
+          "require_citations_for_rag": false
+        },
+        "redaction": {
+          "enabled": true,
+          "patterns": [
+            "(?i)api[_-]?key\\s*=\\s*[^\\s]+",
+            "(?i)token\\s*=\\s*[^\\s]+",
+            "(?i)authorization:\\s*bearer\\s+[^\\s]+"
+          ],
+          "mask": "***REDACTED***"
+        },
+        "input_sanitization": {
+          "enabled": true,
+          "max_input_chars": 12000,
+          "strip_html": true
+        },
+        "allow_schema_soft_fail": true
+      },
+      "retries": {
+        "max_attempts": 3,
+        "backoff_ms": 400,
+        "retry_on": ["timeout", "rate_limit", "5xx"],
+        "jitter": true
+      },
+      "fallbacks": null
+    },
+    {
+      "id": "validator",
+      "name": "Validator (QA)",
+      "graph": {
+        "nodes": [
+          {
+            "id": "qa",
+            "type": "LLM",
+            "name": "Validate Grounding + Safety",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.0,
+              "system_prompt": "You are a strict QA agent for biomedical outputs. Check: (1) claims supported by citations/tool provenance, (2) no PHI/PII leaks, (3) no overconfident medical guidance, (4) if insufficient evidence then require abstain. Output JSON with fields: pass:boolean, issues:string[], action: one of 'retry_research'|'retry_tools'|'ok'|'abstain'.",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": true
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "QA Output",
+            "params": { "output_template": "{current}", "format": "json", "is_start": false }
+          }
+        ],
+        "edges": [
+          { "source": "qa", "target": "output", "condition": null }
+        ],
+        "root": "qa"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.0,
+        "system_prompt": "You validate grounding, policy compliance, and recommend retry paths."
+      },
+      "tools_allowlist": [],
+      "memory_namespace": null,
+      "budgets": {
+        "max_tokens": 20000,
+        "max_tool_calls": null,
+        "max_steps": 4,
+        "max_depth": 2
+      },
+      "policies": {
+        "tool_allowlist": [],
+        "tool_denylist": [],
+        "max_tool_calls": null,
+        "max_steps": 4,
+        "max_depth": 2,
+        "abstain": {
+          "enabled": true,
+          "reason_template": "Validation failed to ensure grounded, safe output.",
+          "confidence_threshold": 0.5,
+          "require_citations_for_rag": true
+        },
+        "redaction": {
+          "enabled": true,
+          "patterns": [],
+          "mask": "***REDACTED***"
+        },
+        "input_sanitization": {
+          "enabled": true,
+          "max_input_chars": 12000,
+          "strip_html": true
+        },
+        "allow_schema_soft_fail": true
+      },
+      "retries": null,
+      "fallbacks": null
+    },
+    {
+      "id": "synthesizer",
+      "name": "Synthesizer",
+      "graph": {
+        "nodes": [
+          {
+            "id": "compose",
+            "type": "LLM",
+            "name": "Compose Final Answer",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.4,
+              "system_prompt": "Compose the final user response. Prefer concise, scientific tone. Include citations when available. If QA indicates abstain, clearly state what evidence is missing and ask targeted follow-ups.",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": true
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Final Output",
+            "params": { "output_template": "{current}", "format": "markdown", "is_start": false }
+          }
+        ],
+        "edges": [{ "source": "compose", "target": "output", "condition": null }],
+        "root": "compose"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.4,
+        "system_prompt": "You synthesize final responses for end users."
+      },
+      "tools_allowlist": [],
+      "memory_namespace": null,
+      "budgets": {
+        "max_tokens": 40000,
+        "max_tool_calls": null,
+        "max_steps": 6,
+        "max_depth": 2
+      },
+      "policies": null,
+      "retries": null,
+      "fallbacks": {
+        "llm_chain": [
+          { "provider": "openai", "model": "gpt-4o-mini", "temperature": 0.4 },
+          { "provider": "anthropic", "model": "claude-sonnet-4-20250514", "temperature": 0.4 }
+        ],
+        "tool_fallbacks": {}
+      }
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability",
+      "graph": {
+        "nodes": [
+          {
+            "id": "route",
+            "type": "Router",
+            "name": "Reliability Router",
+            "params": {
+              "routes": { "recover": "runtime_error" },
+              "default_route": "runtime_error",
+              "engine": "langchain",
+              "is_start": true
+            }
+          },
+          {
+            "id": "runtime_error",
+            "type": "Error",
+            "name": "Runtime Error Handler",
+            "params": {
+              "error_template": "A recoverable execution issue occurred. Return a safe fallback answer (no guesses).",
+              "is_start": false
+            }
+          },
+          {
+            "id": "recover",
+            "type": "LLM",
+            "name": "Recovery Response",
+            "params": {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "system_prompt": "Generate a safe fallback response after an execution issue. Suggest next steps and what failed (without leaking secrets).",
+              "prompt_template": "{input}",
+              "engine": "langchain",
+              "is_start": false
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Reliability Output",
+            "params": { "output_template": "{current}", "format": "text", "is_start": false }
+          }
+        ],
+        "edges": [
+          { "source": "route", "target": "runtime_error", "condition": null },
+          { "source": "runtime_error", "target": "recover", "condition": null },
+          { "source": "recover", "target": "output", "condition": null }
+        ],
+        "root": "route"
+      },
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-4o-mini",
+        "temperature": 0.2,
+        "system_prompt": "You ensure robust fallback behavior."
+      },
+      "tools_allowlist": [],
+      "memory_namespace": null,
+      "budgets": {
+        "max_tokens": null,
+        "max_tool_calls": null,
+        "max_steps": 6,
+        "max_depth": 2
+      },
+      "policies": null,
+      "retries": null,
+      "fallbacks": null
+    }
+  ],
+  "entrypoints": [
+    { "name": "main", "agent_id": "supervisor", "description": "Supervisor routes to specialists." },
+    { "name": "research", "agent_id": "researcher", "description": "RAG-focused research mode." },
+    { "name": "tools", "agent_id": "toolsmith", "description": "Tool execution mode." },
+    { "name": "validate", "agent_id": "validator", "description": "QA validation mode." },
+    { "name": "recovery", "agent_id": "reliability", "description": "Safe recovery path." }
+  ],
+  "handoffs": [
+    {
+      "from_agent_id": "supervisor",
+      "to_agent_id": "researcher",
+      "mode": "call",
+      "guard": null,
+      "input_schema": { "kind": "json_schema", "ref": "schema://handoff_input" },
+      "output_schema": { "kind": "json_schema", "ref": "schema://handoff_output" }
+    },
+    {
+      "from_agent_id": "supervisor",
+      "to_agent_id": "toolsmith",
+      "mode": "call",
+      "guard": null,
+      "input_schema": { "kind": "json_schema", "ref": "schema://handoff_input" },
+      "output_schema": { "kind": "json_schema", "ref": "schema://handoff_output" }
+    },
+    {
+      "from_agent_id": "supervisor",
+      "to_agent_id": "validator",
+      "mode": "call",
+      "guard": null,
+      "input_schema": { "kind": "json_schema", "ref": "schema://handoff_input" },
+      "output_schema": { "kind": "json_schema", "ref": "schema://handoff_output" }
+    },
+    {
+      "from_agent_id": "supervisor",
+      "to_agent_id": "synthesizer",
+      "mode": "call",
+      "guard": null,
+      "input_schema": { "kind": "json_schema", "ref": "schema://handoff_input" },
+      "output_schema": { "kind": "json_schema", "ref": "schema://handoff_output" }
+    },
+    {
+      "from_agent_id": "supervisor",
+      "to_agent_id": "reliability",
+      "mode": "delegate",
+      "guard": null,
+      "input_schema": { "kind": "json_schema", "ref": "schema://handoff_input" },
+      "output_schema": { "kind": "json_schema", "ref": "schema://handoff_output" }
+    }
+  ],
+  "resources": {
+    "shared_memory_namespaces": ["research_memory", "tool_memory"],
+    "global_tools": ["search", "web_search", "url_reader", "calculator", "datetime"],
+    "schema_contracts": {
+      "handoff_input": {
+        "type": "object",
+        "required": ["input"],
+        "properties": { "input": { "type": "string" } },
+        "additionalProperties": true
+      },
+      "handoff_output": {
+        "type": "object",
+        "required": ["result"],
+        "properties": { "result": {} },
+        "additionalProperties": true
+      }
+    }
+  },
+  "policies": {
+    "tool_allowlist": [
+      "search",
+      "web_search",
+      "url_reader",
+      "calculator",
+      "datetime",
+      "mcp:*",
+      "sql_query",
+      "http_request",
+      "python_sandbox",
+      "s3_get_object"
+    ],
+    "tool_denylist": ["python_repl", "shell", "exec"],
+    "max_tool_calls": null,
+    "max_steps": null,
+    "max_depth": null,
+    "abstain": {
+      "enabled": true,
+      "reason_template": "Insufficient confidence to continue safely.",
+      "confidence_threshold": 0.35,
+      "require_citations_for_rag": true
+    },
+    "redaction": {
+      "enabled": true,
+      "patterns": [
+        "(?i)api[_-]?key\\s*=\\s*[^\\s]+",
+        "(?i)token\\s*=\\s*[^\\s]+",
+        "(?i)authorization:\\s*bearer\\s+[^\\s]+"
+      ],
+      "mask": "***REDACTED***"
+    },
+    "input_sanitization": {
+      "enabled": true,
+      "max_input_chars": 12000,
+      "strip_html": true
+    },
+    "allow_schema_soft_fail": true
+  }
+}

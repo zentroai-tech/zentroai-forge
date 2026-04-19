@@ -1,0 +1,5 @@
+{
+  "target": "aws-ecs",
+  "dependency_signature": "7a18541f38cebc31f773735727c743b4f7bfb46784b2d9de5f73e19e1438adb0",
+  "source": "auto-generated-by-exporter"
+}

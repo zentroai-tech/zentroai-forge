@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["ok", "query_id", "row_count", "rows"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "query_id": { "type": "string" },
+    "row_count": { "type": "integer", "minimum": 0 },
+    "rows": { "type": "array" }
+  },
+  "additionalProperties": true
+}

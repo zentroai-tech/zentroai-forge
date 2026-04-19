@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "required": ["query", "chunks", "citations", "total_chunks"],
+  "properties": {
+    "query": {
+      "type": "string"
+    },
+    "chunks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["citation_id", "text", "score", "source"],
+        "properties": {
+          "citation_id": {
+            "type": "string",
+            "pattern": "^C[0-9]+$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "source": {
+            "type": "object",
+            "required": ["source_id"],
+            "properties": {
+              "source_id": { "type": "string" },
+              "title":     { "type": "string" },
+              "url":       { "type": "string" },
+              "span": {
+                "type": "object",
+                "properties": {
+                  "start": { "type": "integer" },
+                  "end":   { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["citation_id", "source_id"],
+        "properties": {
+          "citation_id": {
+            "type": "string",
+            "pattern": "^C[0-9]+$"
+          },
+          "source_id": { "type": "string" },
+          "title":     { "type": "string" },
+          "url":       { "type": "string" }
+        }
+      }
+    },
+    "total_chunks": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "required": ["collection", "ids"],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "maxItems": 10000
+    }
+  },
+  "additionalProperties": false
+}

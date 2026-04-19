@@ -1,0 +1,67 @@
+{
+  "ir_version": "2",
+  "flow": {
+    "id": "simple-assistant",
+    "name": "Simple Assistant",
+    "version": "1.0.0",
+    "engine_preference": "langchain",
+    "description": "A simple conversational assistant that answers questions."
+  },
+  "agents": [
+    {
+      "id": "main",
+      "name": "Assistant",
+      "llm": {
+        "provider": "auto",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "system_prompt": "You are a helpful, friendly assistant. Provide clear and concise answers."
+      },
+      "graph": {
+        "root": "llm",
+        "nodes": [
+          {
+            "id": "llm",
+            "type": "LLM",
+            "name": "Assistant",
+            "params": {
+              "model": "gpt-3.5-turbo",
+              "temperature": 0.7,
+              "system_prompt": "You are a helpful, friendly assistant. Provide clear and concise answers.",
+              "prompt_template": "{input}"
+            }
+          },
+          {
+            "id": "output",
+            "type": "Output",
+            "name": "Response",
+            "params": {
+              "output_template": "{current}",
+              "format": "text"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "source": "llm",
+            "target": "output"
+          }
+        ]
+      }
+    }
+  ],
+  "entrypoints": [
+    {
+      "name": "main",
+      "agent_id": "main",
+      "description": "Default entrypoint"
+    }
+  ],
+  "handoffs": [],
+  "resources": {
+    "shared_memory_namespaces": [],
+    "global_tools": [],
+    "schema_contracts": {}
+  },
+  "policies": {}
+}

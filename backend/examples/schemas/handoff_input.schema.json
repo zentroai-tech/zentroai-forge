@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HandoffInput",
+  "type": "object",
+  "required": ["input"],
+  "properties": {
+    "input": {"type": ["string", "object", "array", "number", "boolean", "null"]},
+    "conversation_id": {"type": "string"},
+    "history": {"type": "array"}
+  },
+  "additionalProperties": true
+}

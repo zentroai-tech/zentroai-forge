@@ -1,0 +1,414 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ── Background Levels ─────────────────────────── */
+  --bg-primary:   #0d0d0d;     /* Deepest — canvas */
+  --bg-secondary: #141414;     /* Panels, sidebar */
+  --bg-tertiary:  #1c1c1c;     /* Cards, inputs, hover surfaces */
+  --bg-card:      #212121;     /* Elevated cards, active states */
+  --bg-elevated:  #2a2a2a;     /* Dropdowns, tooltips */
+  --bg-selected:  #2f2f2f;     /* Selected chips/dropdowns */
+
+  /* ── Borders (quiet by default, only speak when needed) */
+  --border-default: #2d2d2d;   /* Resting — deliberately quiet */
+  --border-subtle:  #242424;   /* Hairline dividers */
+  --border-hover:   #3a3a3a;   /* Hover state */
+  --border-active:  #4d4d4d;   /* Active / focus */
+
+  /* ── Text ──────────────────────────────────────── */
+  --text-primary:   #ececec;   /* Main readable text */
+  --text-secondary: #a0a0a0;   /* Labels, meta */
+  --text-muted:     #666666;   /* Disabled, placeholder */
+
+  /* ── Node Accent Colors (single source of truth) ── */
+  --node-trigger:   #eab308;
+  --node-llm:       #8b5cf6;
+  --node-tool:      #f97316;
+  --node-router:    #22c55e;
+  --node-retriever: #3b82f6;
+  --node-memory:    #ec4899;
+  --node-output:    #06b6d4;
+  --node-graph:     #f97316;
+
+  /* ── UI Accent ─────────────────────────────────── */
+  --accent-primary:      #22d3ee;
+  --accent-success:      #22c55e;
+  --accent-warning:      #eab308;
+  --accent-error:        #ef4444;
+  --warning-soft-bg:     rgba(234, 179, 8, 0.10);
+  --warning-soft-border: rgba(234, 179, 8, 0.28);
+  --error-soft-bg:       rgba(239, 68, 68, 0.10);
+  --error-soft-border:   rgba(239, 68, 68, 0.28);
+
+  /* ── Typography Scale ───────────────────────────── */
+  --text-2xs:  10px;
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   15px;
+  --text-xl:   18px;
+  --text-2xl:  22px;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semi:   600;
+
+  --leading-tight:  1.25;
+  --leading-normal: 1.5;
+
+  /* ── Spacing Scale (4px base grid) ─────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+/* ═══════════════════════════════════════════════════
+   Component Layer
+   ═══════════════════════════════════════════════════ */
+
+@layer components {
+
+  /* ── Buttons ─────────────────────────────────── */
+
+  .btn-primary {
+    @apply px-3.5 py-1.5 text-xs font-medium text-white rounded-lg transition-all duration-150;
+    background: #0e7490;
+  }
+  .btn-primary:hover {
+    background: #0c6478;
+    /* No glow — flat and clean */
+  }
+  .btn-primary:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .btn-secondary:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  .btn-secondary:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply px-3.5 py-1.5 text-xs font-medium text-white rounded-lg transition-all duration-150;
+    background: #dc2626;
+  }
+  .btn-danger:hover {
+    background: #b91c1c;
+    /* No glow — flat and clean */
+  }
+
+  /* Pill button — used for top bar actions */
+  .btn-pill {
+    @apply px-3.5 py-1 text-xs font-medium rounded-full transition-all duration-150;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+  }
+  .btn-pill:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+  .btn-pill.active {
+    background: var(--bg-selected);
+    color: var(--text-primary);
+    border-color: var(--border-active);
+  }
+
+  /* ── Form Inputs ─────────────────────────────── */
+
+  .input-field {
+    @apply w-full px-2.5 py-1.5 text-xs rounded-lg transition-all duration-150;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+  }
+  .input-field:focus {
+    @apply outline-none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.10);
+  }
+  .input-field::placeholder {
+    color: var(--text-muted);
+  }
+
+  .input-inline {
+    @apply px-2 py-1 text-xs rounded-md transition-all duration-150;
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--text-primary);
+  }
+  .input-inline:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+  }
+  .input-inline:focus {
+    @apply outline-none;
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-default);
+  }
+
+  .select-minimal {
+    @apply px-2 py-1 text-xs rounded-md transition-all duration-150 cursor-pointer;
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+  }
+  .select-minimal:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+  }
+  .select-minimal:focus {
+    @apply outline-none;
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-default);
+  }
+
+  .chip-option {
+    @apply rounded-md border text-xs transition-colors;
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+  }
+  .chip-option:hover {
+    background-color: var(--bg-card);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+  .chip-option.active {
+    background-color: var(--bg-selected);
+    border-color: var(--border-active);
+    color: var(--text-primary);
+  }
+
+  .msg-warning-soft {
+    background: var(--warning-soft-bg);
+    border: 1px solid var(--warning-soft-border);
+    color: #f8d77b;
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+
+  .msg-error-soft {
+    background: var(--error-soft-bg);
+    border: 1px solid var(--error-soft-border);
+    color: #f7a2a2;
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+
+  /* ── Card / Panel / Section ──────────────────── */
+
+  .card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+  }
+
+  .panel {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .section-header {
+    @apply text-[10px] font-semibold uppercase tracking-widest px-3 py-1.5;
+    color: var(--text-muted);
+    letter-spacing: 0.09em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   React Flow Overrides
+   ═══════════════════════════════════════════════════ */
+
+.react-flow__node.selected {
+  box-shadow: none !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent-primary) !important;
+  stroke-width: 2.5 !important;
+}
+
+/* Handles */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background-color: var(--bg-card) !important;
+  border: 2px solid var(--text-muted) !important;
+  transition: all 0.15s ease;
+}
+.react-flow__handle:hover {
+  transform: scale(1.4);
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.35);
+}
+
+/* Edges — solid lines (no dash) */
+.react-flow__edge-path {
+  stroke-dasharray: none;
+  animation: none;
+}
+
+/* MiniMap */
+.react-flow__minimap {
+  background-color: var(--bg-secondary) !important;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+}
+.react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Controls */
+.react-flow__controls {
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+.react-flow__controls-button {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-muted) !important;
+  transition: all 0.15s ease;
+}
+.react-flow__controls-button:hover {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__background {
+  background-color: var(--bg-primary) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   Scrollbar
+   ═══════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* ═══════════════════════════════════════════════════
+   Node Styles
+   ═══════════════════════════════════════════════════ */
+
+/* Left-accent border — references CSS vars (single source) */
+.node-accent-purple { border-left: 3px solid var(--node-llm); }
+.node-accent-orange { border-left: 3px solid var(--node-tool); }
+.node-accent-green  { border-left: 3px solid var(--node-router); }
+.node-accent-blue   { border-left: 3px solid var(--node-retriever); }
+.node-accent-pink   { border-left: 3px solid var(--node-memory); }
+.node-accent-cyan   { border-left: 3px solid var(--node-output); }
+
+/* Glow classes — kept intentionally subtle */
+.node-glow-yellow  { box-shadow: 0 0 8px rgba(234, 179, 8, 0.13); }
+.node-glow-purple  { box-shadow: 0 0 8px rgba(139, 92, 246, 0.13); }
+.node-glow-orange  { box-shadow: 0 0 8px rgba(249, 115, 22, 0.13); }
+.node-glow-green   { box-shadow: 0 0 8px rgba(34, 197, 94, 0.13); }
+.node-glow-blue    { box-shadow: 0 0 8px rgba(59, 130, 246, 0.13); }
+.node-glow-pink    { box-shadow: 0 0 8px rgba(236, 72, 153, 0.13); }
+.node-glow-cyan    { box-shadow: 0 0 8px rgba(6, 182, 212, 0.13); }
+
+/* Selected node */
+.node-selected {
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.25), 0 0 0 1px rgba(34, 211, 238, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   Sidebar Item States
+   ═══════════════════════════════════════════════════ */
+
+.sidebar-item {
+  @apply relative flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-grab transition-all duration-150;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.sidebar-item:hover {
+  background: var(--bg-tertiary);
+  /* No border on hover — background alone signals the state */
+}
+.sidebar-item:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+/* Collapsible section chevron */
+.section-chevron {
+  @apply transition-transform duration-150;
+}
+.section-chevron.open {
+  transform: rotate(90deg);
+}
+
+/* ═══════════════════════════════════════════════════
+   Toast customizations
+   ═══════════════════════════════════════════════════ */
+
+.toast-container {
+  font-family: inherit;
+}
+
+/* ═══════════════════════════════════════════════════
+   Dropdown menu
+   ═══════════════════════════════════════════════════ */
+
+.dropdown-menu {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+.dropdown-item {
+  @apply w-full text-left px-3 py-1.5 text-xs flex items-center gap-2.5 transition-colors;
+  color: var(--text-secondary);
+}
+.dropdown-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+.dropdown-item:disabled {
+  @apply opacity-40 cursor-not-allowed;
+}

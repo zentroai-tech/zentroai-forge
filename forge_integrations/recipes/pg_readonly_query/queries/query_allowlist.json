@@ -1,0 +1,10 @@
+{
+  "get_patient_by_id": {
+    "sql": "SELECT id, name, created_at FROM patients WHERE id = %(patient_id)s LIMIT 1",
+    "params": ["patient_id"]
+  },
+  "list_recent_trials": {
+    "sql": "SELECT trial_id, status, started_at FROM clinical_trials ORDER BY started_at DESC LIMIT %(limit)s",
+    "params": ["limit"]
+  }
+}

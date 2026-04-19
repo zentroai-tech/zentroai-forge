@@ -1,0 +1,105 @@
+# Solo codigo: ignorar dependencias, builds, caches y archivos locales
+
+# ---------------------------------------------------------------------------
+# Root / monorepo caches and local tooling
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tmp/
+.claude/
+
+# ---------------------------------------------------------------------------
+# Frontend (Node / Next.js)
+# ---------------------------------------------------------------------------
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.pnp
+frontend/.pnp.js
+frontend/.vercel
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ---------------------------------------------------------------------------
+# Backend (Python)
+# ---------------------------------------------------------------------------
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/*.egg-info/
+backend/.eggs/
+backend/dist/
+backend/build/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+backend/coverage.xml
+
+# ---------------------------------------------------------------------------
+# Python caches outside backend/
+# ---------------------------------------------------------------------------
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# ---------------------------------------------------------------------------
+# Databases and local artifacts
+# ---------------------------------------------------------------------------
+backend/*.db
+backend/*.sqlite
+backend/export.zip
+*.db
+*.sqlite
+
+# ---------------------------------------------------------------------------
+# Local runtime artifacts (do not commit)
+# ---------------------------------------------------------------------------
+artifacts/
+exports/
+screenshots/
+backlog/
+nul
+
+# ---------------------------------------------------------------------------
+# IDE and OS
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Logs and temp files
+# ---------------------------------------------------------------------------
+*.log
+*.tmp
+.cache/
+
+# ---------------------------------------------------------------------------
+# Env with secrets (only examples should remain)
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+backend/.env
+backend/.env.*
+!backend/.env.example

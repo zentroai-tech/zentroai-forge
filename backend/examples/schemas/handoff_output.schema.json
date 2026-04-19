@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HandoffOutput",
+  "type": "object",
+  "required": ["result"],
+  "properties": {
+    "result": {},
+    "agent_id": {"type": "string"},
+    "status": {"type": "string"}
+  },
+  "additionalProperties": true
+}

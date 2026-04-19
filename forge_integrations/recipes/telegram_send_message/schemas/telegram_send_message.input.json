@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": ["text"],
+  "properties": {
+    "chat_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "parse_mode": {
+      "type": "string",
+      "enum": ["Markdown", "MarkdownV2", "HTML"]
+    },
+    "disable_web_page_preview": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
