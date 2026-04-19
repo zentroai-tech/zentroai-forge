@@ -1,4 +1,4 @@
-# Zentro Forge
+# Zentro Forge AI
 
 Zentro Forge is a visual agent engineering workbench. It lets you design,
 run, evaluate, debug, and export multi-agent systems from a single UI.
