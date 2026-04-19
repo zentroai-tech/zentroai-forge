@@ -34,8 +34,8 @@ run, evaluate, debug, and export multi-agent systems from a single UI.
 ### Install
 
 ```bash
-git clone <your-repo-url>
-cd agent-compiler
+git clone https://github.com/zentroai-tech/zentroai-forge.git
+cd zentroai-forge
 
 cd backend
 python -m venv .venv
